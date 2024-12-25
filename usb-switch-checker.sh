@@ -17,7 +17,7 @@ usage() {
 check_tools() {
   local tools=("lsusb" "grep" "ddcutil")
   for tool in "${tools[@]}"; do
-    if ! command -v "$tool" &> /dev/null; then
+    if ! command -v "$tool" &>/dev/null; then
       echo "Error: $tool is not installed. Please install it to run this script."
       exit 1
     fi
@@ -59,8 +59,8 @@ check_tools
 #REQUIRED_COUNT="$2"
 
 # Set default values for device ID and required count
-DEVICE_ID="${1:-05e3:0610}"  # Default device ID
-REQUIRED_COUNT="${2:-3}"      # Default required count
+DEVICE_ID="${1:-05e3:0610}" # Default device ID
+REQUIRED_COUNT="${2:-3}"    # Default required count
 
 # Capture the initial lsusb output
 PREVIOUS_OUTPUT=$(lsusb)
@@ -82,14 +82,14 @@ while true; do
       if [ "$COMMAND_EXECUTED" = false ]; then
         # Switch to DP1
         ddcutil --display 1 setvcp 60 "$VCP_CODE_DP1"
-        COMMAND_EXECUTED=true  # Set the flag to true after execution
+        COMMAND_EXECUTED=true # Set the flag to true after execution
       fi
     else
       # Execute echo empty if matches are less than 3 and not already executed
       if [ "$COMMAND_EXECUTED" = false ]; then
         # Switch to HDMI
         ddcutil --display 1 setvcp 60 "$VCP_CODE_HDMI"
-        COMMAND_EXECUTED=true  # Set the flag to true after execution
+        COMMAND_EXECUTED=true # Set the flag to true after execution
       fi
     fi
 
