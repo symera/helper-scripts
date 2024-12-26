@@ -7,9 +7,9 @@ VCP_CODE_HDMI="0x06"
 
 # Define usage function
 usage() {
-  echo "Usage: $0 <device_id> <required_count>"
+  echo "Usage: $0 [DEVICE_ID] [REQUIRED_COUNT]"
   echo "Example: $0 00f0:00f0 2"
-  echo "This script monitors USB devices and runs 'ddcutil setvcp' if at least <required_count> devices with ID <device_id> are detected."
+  echo "This script monitors USB devices and runs 'ddcutil setvcp' if at least [REQUIRED_COUNT] devices with ID [DEVICE_ID] are detected."
   exit 1
 }
 
@@ -63,19 +63,19 @@ DEVICE_ID="${1:-05e3:0610}" # Default device ID
 REQUIRED_COUNT="${2:-3}"    # Default required count
 
 # Capture the initial lsusb output
-PREVIOUS_OUTPUT=$(lsusb)
+PREVIOUS_OUTPUT=$(lsusb | grep -E "Bus [0-9]+ Device [0-9]+: ID $DEVICE_ID .*")
 # Initialize a variable to track if the command has been executed
 COMMAND_EXECUTED=false
 
 # Infinite loop to monitor changes
 while true; do
   # Capture the current lsusb output
-  CURRENT_OUTPUT=$(lsusb)
+  CURRENT_OUTPUT=$(lsusb | grep -E "Bus [0-9]+ Device [0-9]+: ID $DEVICE_ID .*")
 
   # Check for differences between previous and current outputs
   if [ "$PREVIOUS_OUTPUT" != "$CURRENT_OUTPUT" ]; then
     # Count matches for the specific regex in the current output
-    MATCH_COUNT=$(echo "$CURRENT_OUTPUT" | grep -E "Bus [0-9]+ Device [0-9]+: ID $DEVICE_ID .*" | wc -l)
+    MATCH_COUNT=$(echo "$CURRENT_OUTPUT" | wc -l)
 
     if [ "$MATCH_COUNT" -ge "$REQUIRED_COUNT" ]; then
       # Execute whoami if at least 3 matches found and not already executed
