@@ -47,6 +47,16 @@ check_tools() {
   fi
 }
 
+# Function to check if the system is fully awake
+is_awake() {
+  # Check if the system is in a sleep state
+  if [[ $(systemctl is-active sleep.target) == "inactive" && $(systemctl is-active suspend.target) == "inactive" ]]; then
+    return 0 # System is awake
+  else
+    return 1 # System is asleep or suspended
+  fi
+}
+
 # Validate that required tools are installed
 check_tools
 
@@ -70,23 +80,24 @@ COMMAND_EXECUTED=false
 # Infinite loop to monitor changes
 while true; do
   # Capture the current lsusb output
-  CURRENT_OUTPUT=$(lsusb | grep -E "Bus [0-9]+ Device [0-9]+: ID $DEVICE_ID .*")
+  CURRENT_OUTPUT=$(lsusb)
 
   # Check for differences between previous and current outputs
   if [ "$PREVIOUS_OUTPUT" != "$CURRENT_OUTPUT" ]; then
     # Count matches for the specific regex in the current output
-    MATCH_COUNT=$(echo "$CURRENT_OUTPUT" | wc -l)
+    MATCH_COUNT=$(echo "$CURRENT_OUTPUT" | grep -E "Bus [0-9]+ Device [0-9]+: ID $DEVICE_ID .*" | wc -l)
 
     if [ "$MATCH_COUNT" -ge "$REQUIRED_COUNT" ]; then
-      # Execute whoami if at least 3 matches found and not already executed
-      if [ "$COMMAND_EXECUTED" = false ]; then
+      # Execute command only if system is awake and not already executed
+      if [ "$COMMAND_EXECUTED" = false ] && is_awake; then
         # Switch to DP1
         ddcutil --display 1 setvcp 60 "$VCP_CODE_DP1"
         COMMAND_EXECUTED=true # Set the flag to true after execution
       fi
+
     else
-      # Execute echo empty if matches are less than 3 and not already executed
-      if [ "$COMMAND_EXECUTED" = false ]; then
+      # Execute command only if system is awake and not already executed
+      if [ "$COMMAND_EXECUTED" = false ] && is_awake; then
         # Switch to HDMI
         ddcutil --display 1 setvcp 60 "$VCP_CODE_HDMI"
         COMMAND_EXECUTED=true # Set the flag to true after execution
@@ -95,8 +106,9 @@ while true; do
 
     # Update previous output for the next iteration
     PREVIOUS_OUTPUT="$CURRENT_OUTPUT"
+
   else
-    # Reset the command executed flag when no change is detected
+    # Reset command executed flag when no change is detected
     COMMAND_EXECUTED=false
   fi
 
