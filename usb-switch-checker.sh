@@ -80,12 +80,12 @@ COMMAND_EXECUTED=false
 # Infinite loop to monitor changes
 while true; do
   # Capture the current lsusb output
-  CURRENT_OUTPUT=$(lsusb)
+  CURRENT_OUTPUT=$(lsusb | grep -E "Bus [0-9]+ Device [0-9]+: ID $DEVICE_ID .*")
 
   # Check for differences between previous and current outputs
   if [ "$PREVIOUS_OUTPUT" != "$CURRENT_OUTPUT" ]; then
     # Count matches for the specific regex in the current output
-    MATCH_COUNT=$(echo "$CURRENT_OUTPUT" | grep -E "Bus [0-9]+ Device [0-9]+: ID $DEVICE_ID .*" | wc -l)
+    MATCH_COUNT=$(echo "$CURRENT_OUTPUT" | wc -l)
 
     if [ "$MATCH_COUNT" -ge "$REQUIRED_COUNT" ]; then
       # Execute command only if system is awake and not already executed
