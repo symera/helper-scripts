@@ -78,14 +78,14 @@ while true; do
     MATCH_COUNT=$(echo "$CURRENT_OUTPUT" | wc -l)
 
     if [ "$MATCH_COUNT" -ge "$REQUIRED_COUNT" ]; then
-      # Execute whoami if at least 3 matches found and not already executed
+      # Continue if at least [REQUIRED_COUNT] of matches found and not already executed
       if [ "$COMMAND_EXECUTED" = false ]; then
         # Switch to DP1
         ddcutil --display 1 setvcp 60 "$VCP_CODE_DP1"
         COMMAND_EXECUTED=true # Set the flag to true after execution
       fi
     else
-      # Execute echo empty if matches are less than 3 and not already executed
+      # Less than [REQUIRED_COUNT] of matches and not already executed
       if [ "$COMMAND_EXECUTED" = false ]; then
         # Switch to HDMI
         ddcutil --display 1 setvcp 60 "$VCP_CODE_HDMI"
@@ -96,7 +96,7 @@ while true; do
     # Update previous output for the next iteration
     PREVIOUS_OUTPUT="$CURRENT_OUTPUT"
   else
-    # Reset the command executed flag when no change is detected
+    # Reset command executed flag (when no change is detected)
     COMMAND_EXECUTED=false
   fi
 
