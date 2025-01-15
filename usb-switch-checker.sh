@@ -47,6 +47,27 @@ check_tools() {
   fi
 }
 
+# Function to check if the system is fully awake
+is_awake() {
+    # Check for common indicators of sleep states
+    if [ -e /sys/class/power_supply/AC/online ]; then
+        AC_STATUS=$(cat /sys/class/power_supply/AC/online)
+        if [ "$AC_STATUS" -eq 1 ]; then
+            return 0 # System is awake (AC power connected)
+        fi
+    fi
+
+    # Check for suspend state using /proc/acpi/wakeup (if available)
+    if [ -e /proc/acpi/wakeup ]; then
+        SUSPEND_STATUS=$(grep -i 'suspend' /proc/acpi/wakeup)
+        if [[ ! $SUSPEND_STATUS =~ .*enabled.* ]]; then
+            return 0 # System is awake (not in suspend)
+        fi
+    fi
+
+    return 1 # System is asleep or in an unknown state
+}
+
 # Validate that required tools are installed
 check_tools
 
@@ -79,14 +100,14 @@ while true; do
 
     if [ "$MATCH_COUNT" -ge "$REQUIRED_COUNT" ]; then
       # Continue if at least [REQUIRED_COUNT] of matches found and not already executed
-      if [ "$COMMAND_EXECUTED" = false ]; then
+      if [ "$COMMAND_EXECUTED" = false ] && is_awake; then
         # Switch to DP1
         ddcutil --display 1 setvcp 60 "$VCP_CODE_DP1"
         COMMAND_EXECUTED=true # Set the flag to true after execution
       fi
     else
       # Less than [REQUIRED_COUNT] of matches and not already executed
-      if [ "$COMMAND_EXECUTED" = false ]; then
+      if [ "$COMMAND_EXECUTED" = false ] && is_awake; then
         # Switch to HDMI
         ddcutil --display 1 setvcp 60 "$VCP_CODE_HDMI"
         COMMAND_EXECUTED=true # Set the flag to true after execution
